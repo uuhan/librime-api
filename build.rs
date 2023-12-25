@@ -8,8 +8,8 @@ fn main() {
 
     let dst = Config::new("librime")
         .define("BUILD_TEST", "0")
-        .define("BUILD_SHARED_LIBS", "0")
-        .define("BUILD_STATIC", "1")
+        .define("BUILD_SHARED_LIBS", "1")
+        .define("BUILD_STATIC", "0")
         .define("CMAKE_BUILD_TYPE", "Release")
         .build();
 
@@ -26,5 +26,5 @@ fn main() {
         .expect("could not write bindings!");
 
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
-    println!("cargo:rustc-link-lib=static=rime");
+    println!("cargo:rustc-link-lib=dylib=rime");
 }
