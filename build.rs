@@ -16,7 +16,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .clang_args(&["-x", "c"])
         .clang_args(&[format!("-I{}/include", dst.display())])
-        .header(format!("{}/include/rime_api.h", dst.display()))
+        .header("wrapper.h")
         .generate()
         .expect("unable to generate rime_api.h bindings!");
 
