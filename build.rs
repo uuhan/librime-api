@@ -6,11 +6,16 @@ fn main() {
         .output()
         .expect("librime make deps failed.");
 
+    #[cfg(feature = "logging")]
+    let rime_logging_switch = "on";
+    #[cfg(not(feature = "logging"))]
+    let rime_logging_switch = "off";
+
     let dst = Config::new("librime")
-        .define("BUILD_TEST", "0")
-        .define("BUILD_SHARED_LIBS", "0")
-        .define("ENABLE_LOGGING", "1")
-        .define("BUILD_STATIC", "1")
+        .define("BUILD_TEST", "off")
+        .define("ENABLE_LOGGING", rime_logging_switch)
+        .define("BUILD_SHARED_LIBS", "off")
+        .define("BUILD_STATIC", "on")
         .build();
 
     let bindings = bindgen::Builder::default()
@@ -26,9 +31,9 @@ fn main() {
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("could not write bindings!");
 
-    #[cfg(feature = "cxx-clang")]
+    #[cfg(feature = "link-cxx")]
     println!("cargo:rustc-flags=-l dylib=c++");
-    #[cfg(feature = "cxx-gcc")]
+    #[cfg(feature = "link-stdcxx")]
     println!("cargo:rustc-flags=-l dylib=stdc++");
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native=librime/lib");

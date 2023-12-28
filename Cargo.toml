@@ -34,5 +34,6 @@ cmake = "0.1"
 bindgen = "0.69"
 
 [features]
-cxx-clang = []
-cxx-gcc = []
+link-cxx = []
+link-stdcxx = []
+logging = []
