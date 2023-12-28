@@ -11,7 +11,6 @@ fn main() {
         .define("BUILD_SHARED_LIBS", "0")
         .define("ENABLE_LOGGING", "1")
         .define("BUILD_STATIC", "1")
-        .define("CMAKE_BUILD_TYPE", "Release")
         .build();
 
     let bindings = bindgen::Builder::default()
