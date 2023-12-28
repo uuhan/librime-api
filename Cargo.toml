@@ -33,3 +33,5 @@ cmake = "0.1"
 bindgen = "0.69"
 
 [features]
+cxx-clang = []
+cxx-gcc = []

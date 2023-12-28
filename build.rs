@@ -26,7 +26,10 @@ fn main() {
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("could not write bindings!");
 
+    #[cfg(feature = "cxx-clang")]
     println!("cargo:rustc-flags=-l dylib=c++");
+    #[cfg(feature = "cxx-gcc")]
+    println!("cargo:rustc-flags=-l dylib=stdc++");
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native=librime/lib");
     println!("cargo:rustc-link-lib=static=rime");
