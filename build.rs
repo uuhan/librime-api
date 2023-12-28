@@ -31,10 +31,21 @@ fn main() {
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("could not write bindings!");
 
-    #[cfg(feature = "link-cxx")]
-    println!("cargo:rustc-flags=-l dylib=c++");
-    #[cfg(feature = "link-stdcxx")]
-    println!("cargo:rustc-flags=-l dylib=stdc++");
+    #[allow(unused_mut, unused_assignments)]
+    let mut selected = false;
+    #[cfg(all(feature = "link-cxx", not(feature = "link-stdcxx")))]
+    {
+        println!("cargo:rustc-flags=-l dylib=c++");
+        selected = true;
+    }
+    #[cfg(all(feature = "link-stdcxx", not(feature = "link-cxx")))]
+    {
+        println!("cargo:rustc-flags=-l dylib=stdc++");
+        selected = true;
+    }
+    if !selected {
+        panic!("Either `link-cxx` or `link-libcxx` should be enabled!");
+    }
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native=librime/lib");
     println!("cargo:rustc-link-lib=static=rime");
