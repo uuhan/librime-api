@@ -1,10 +1,11 @@
 [package]
 name = "librime-api"
-version = "0.1.0+1.9.0"
+version = "0.1.0"
 edition = "2021"
 homepage = "https://github.com/uuhan/librime-api"
 description = "librime rust bindings"
 license = "UNKNOWN"
+readme = "README.md"
 include = [
   "Cargo.toml",
   "build.rs",
