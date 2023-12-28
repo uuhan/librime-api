@@ -20,9 +20,10 @@ fn main() {
         .generate()
         .expect("unable to generate rime_api.h bindings!");
 
-    let out = std::path::PathBuf::from("./src");
+    let out = std::env::var("OUT_DIR").unwrap();
+    let out_dir = std::path::PathBuf::from(&out);
     bindings
-        .write_to_file(out.join("api.rs"))
+        .write_to_file(out_dir.join("bindings.rs"))
         .expect("could not write bindings!");
 
     println!("cargo:rustc-flags=-l dylib=c++");

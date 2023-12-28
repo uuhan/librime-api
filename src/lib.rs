@@ -4,7 +4,7 @@
 #![allow(non_snake_case)]
 
 pub mod api {
-    include!("./api.rs");
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
 #[cfg(test)]

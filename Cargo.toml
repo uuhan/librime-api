@@ -1,7 +1,27 @@
 [package]
 name = "librime-api"
-version = "0.1.0"
+version = "0.1.0+1.9.0"
 edition = "2021"
+homepage = "https://github.com/uuhan/librime-api"
+description = "librime rust bindings"
+license = "UNKNOWN"
+include = [
+  "Cargo.toml",
+  "build.rs",
+  "src/**/*",
+  "wrapper.h",
+  "librime/",
+  "!librime/bin",
+  "!librime/lib",
+  "!librime/dist",
+  "!librime/build",
+  "!librime/deps/glog/build",
+  "!librime/deps/opencc/build",
+  "!librime/deps/yaml-cpp/build",
+  "!librime/deps/marisa-trie/build",
+  "!librime/deps/leveldb/build",
+  "!librime/deps/googletest/build",
+]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
