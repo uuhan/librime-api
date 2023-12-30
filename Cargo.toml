@@ -1,6 +1,6 @@
 [package]
 name = "librime-api"
-version = "0.1.0"
+version = "0.1.0+de12d6a"
 edition = "2021"
 homepage = "https://github.com/uuhan/librime-api"
 description = "librime rust bindings"
