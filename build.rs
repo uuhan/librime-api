@@ -33,6 +33,7 @@ fn main() {
 
     #[allow(unused_mut, unused_assignments)]
     let mut selected = false;
+
     #[cfg(all(feature = "link-cxx", not(feature = "link-stdcxx")))]
     {
         println!("cargo:rustc-flags=-l dylib=c++");
@@ -43,9 +44,14 @@ fn main() {
         println!("cargo:rustc-flags=-l dylib=stdc++");
         selected = true;
     }
+
     if !selected {
-        panic!("Either `link-cxx` or `link-libcxx` should be enabled!");
+        #[cfg(target_os = "macos")]
+        println!("cargo:rustc-flags=-l dylib=c++");
+        #[cfg(target_os = "linux")]
+        println!("cargo:rustc-flags=-l dylib=stdc++");
     }
+
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native=librime/lib");
     println!("cargo:rustc-link-lib=static=rime");
