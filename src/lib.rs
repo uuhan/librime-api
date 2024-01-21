@@ -14,6 +14,7 @@ pub mod api {
 
 pub use api::RimeSessionId;
 
+#[doc = include_str!("../README.md")]
 #[derive(Debug)]
 pub struct Rime(RimeInner);
 

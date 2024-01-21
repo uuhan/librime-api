@@ -1,25 +1,28 @@
-## librime rust bindings
+## About
 
-https://github.com/rime/librime
+This is a Rust crate which export & extend the [librime](https://github.com/rime/librime) project
 
-commit: de12d6ae52ea0439ac689a9469b7041653a19fd5
+Aims to have user friendly api and to help writing librime modules in Rust.
 
-## features
-
-1. logging: building librime with *-DENABLE_LOGGING=on*
-
-2. link-cxx: link librime with *-lc++*
-   
-3. link-stdcxx: link librime with *-lstdc++*
-
-## usage
+## Usage
 
 ```toml
 [dependencies.librime-api]
-version = "0.1.0"
-features = ["link-cxx"]
+git = "https://github.com/uuhan/librime-api"
+branch = "master"
 ```
 
-```rust
-use librime_api::api as librime;
+```rust,no_run
+use librime_api::*;
+let mut rime = RimeBuilder::new()
+    .shared_data_dir("./rime-ice")
+    .user_data_dir("./rime-user")
+    .distribution_name("RIME")
+    .distribution_code_name("RIME")
+    .distribution_version("RIME")
+    .app_name("rime-query")
+    .log_dir("./rime-log")
+    .build()
+    .unwrap();
 ```
+
