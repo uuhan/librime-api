@@ -1,6 +1,6 @@
 [package]
 name = "librime-api"
-version = "0.1.0+de12d6a"
+version = "0.1.1+72f833d"
 edition = "2021"
 homepage = "https://github.com/uuhan/librime-api"
 description = "librime rust bindings"
@@ -25,13 +25,13 @@ include = [
 ]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 
 [build-dependencies]
 cmake = "0.1"
 bindgen = "0.69"
+cc = "1.0.83"
 
 [features]
 link-cxx = []

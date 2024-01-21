@@ -145,9 +145,10 @@ dependencies = [
 
 [[package]]
 name = "librime-api"
-version = "0.1.0+de12d6a"
+version = "0.1.1+72f833d"
 dependencies = [
  "bindgen",
+ "cc",
  "cmake",
 ]
 
