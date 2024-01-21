@@ -23,7 +23,7 @@ pub mod status;
 pub mod util;
 
 pub mod prelude {
-    pub use super::Rime;
+    pub use super::{Rime, RimeBuilder};
 
     pub use super::api::RimeSessionId;
     pub use super::candidate::{RimeCandidate, RimeCandidateList};
