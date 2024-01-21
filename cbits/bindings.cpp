@@ -4,9 +4,11 @@
 // Export To Rust
 // --------------------------------------------------
 
-RimeTraits
+RimeTraits *
 rime_traits_init() {
-  RIME_STRUCT(RimeTraits, traits);
+  RimeTraits* traits = new RimeTraits;
+
+  RIME_STRUCT_INIT(RimeTraits, *traits);
 
   return traits;
 }
