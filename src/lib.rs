@@ -5,12 +5,36 @@
 
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-pub mod api {
+mod api {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
+
+#[macro_use]
+mod mac;
+pub mod candidate;
+pub mod commit;
+pub mod context;
+pub mod session;
+pub mod status;
+pub mod util;
+
+pub mod prelude {
+    pub use super::Rime;
+
+    pub use super::api::RimeSessionId;
+    pub use super::candidate::{RimeCandidate, RimeCandidateList};
+    pub use super::commit::RimeCommit;
+    pub use super::context::RimeContext;
+    pub use super::session::RimeSession;
+    pub use super::status::RimeStatus;
+}
+
+use context::RimeContext;
+use session::RimeSession;
 
 pub use api::RimeSessionId;
 
@@ -18,7 +42,9 @@ pub use api::RimeSessionId;
 #[derive(Debug)]
 pub struct Rime(RimeInner);
 
-type NotificationHandler = Box<dyn for<'a, 'b> Fn(RimeSessionId, &str, &str) + Send + 'static>;
+type NotificationHandler =
+    Box<dyn for<'a, 'b> Fn(RimeSessionId, &'a str, &'b str) + Send + 'static>;
+
 struct RimeInner {
     /// The inner RimeTraits in librime world
     inner: *mut api::RimeTraits,
@@ -251,6 +277,14 @@ impl Rime {
         }
     }
 
+    pub fn create_session<'a>(&'a self) -> RimeSession<'a> {
+        let id = Rime::CreateSession();
+        RimeSession {
+            id,
+            rime: PhantomData,
+        }
+    }
+
     pub fn DeployWorkspace() -> bool {
         unsafe { api::RimeDeployWorkspace() != 0 }
     }
@@ -274,7 +308,7 @@ impl Rime {
         unsafe { api::RimeSyncUserData() != 0 }
     }
 
-    pub fn CreateSession() -> RimeSessionId {
+    fn CreateSession() -> RimeSessionId {
         unsafe { api::RimeCreateSession() }
     }
 
@@ -400,9 +434,9 @@ impl Rime {
                 value.push(0);
                 let value = CStr::from_bytes_until_nul(&value)
                     .ok()?
-                    .to_str()
-                    .ok()?
-                    .to_owned();
+                    .to_string_lossy()
+                    .to_string();
+
                 return Some(value);
             }
 
