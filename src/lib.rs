@@ -312,11 +312,11 @@ impl Rime {
         unsafe { api::RimeCreateSession() }
     }
 
-    pub fn FindSession(id: RimeSessionId) -> bool {
+    fn FindSession(id: RimeSessionId) -> bool {
         unsafe { api::RimeFindSession(id) != 0 }
     }
 
-    pub fn DestroySession(id: RimeSessionId) -> bool {
+    fn DestroySession(id: RimeSessionId) -> bool {
         unsafe { api::RimeDestroySession(id) != 0 }
     }
 

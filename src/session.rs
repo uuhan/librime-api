@@ -72,8 +72,14 @@ impl<'a> RimeSession<'a> {
             }
         }
     }
+
+    pub fn clear_composition(&self) {
+        Rime::ClearComposition(self.id);
+    }
 }
 
 impl<'a> Drop for RimeSession<'a> {
-    fn drop(&mut self) {}
+    fn drop(&mut self) {
+        Rime::DestroySession(self.id);
+    }
 }
