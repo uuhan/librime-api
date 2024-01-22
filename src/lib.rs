@@ -9,21 +9,47 @@ use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-mod api {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
-
 #[macro_use]
 mod mac;
+pub mod util;
+
+mod api {
+    use std::sync::OnceLock;
+
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+    // It's just a builder
+    impl RimeTraits {
+        pub unsafe fn setup(mut self) {
+            RimeSetup(&mut self);
+            RimeInitialize(&mut self);
+            RimeDeployerInitialize(&mut self);
+
+            if RimeStartMaintenanceOnWorkspaceChange() != 0 {
+                RimeJoinMaintenanceThread();
+            }
+        }
+    }
+
+    impl Default for RimeTraits {
+        fn default() -> Self {
+            rime_struct_init!(RimeTraits)
+        }
+    }
+}
+
 pub mod candidate;
 pub mod commit;
 pub mod context;
+pub mod error;
+pub mod module;
 pub mod session;
 pub mod status;
-pub mod util;
 
 pub mod prelude {
     pub use super::{Rime, RimeBuilder};
+    #[cfg(feature = "logging")]
+    pub use super::{RimeLogKind, RimeMinLogLevel};
 
     pub use super::api::RimeSessionId;
     pub use super::candidate::{RimeCandidate, RimeCandidateList};
@@ -38,32 +64,40 @@ use session::RimeSession;
 
 pub use api::RimeSessionId;
 
-#[doc = include_str!("../README.md")]
-#[derive(Debug)]
-pub struct Rime(RimeInner);
-
-type NotificationHandler =
-    Box<dyn for<'a, 'b> Fn(RimeSessionId, &'a str, &'b str) + Send + 'static>;
-
-struct RimeInner {
-    /// The inner RimeTraits in librime world
-    inner: *mut api::RimeTraits,
-    /// The notification handler
-    handler: Option<*mut NotificationHandler>,
+#[cfg(feature = "logging")]
+/// Minimal level of logged messages.
+///  Value is passed to Glog library using FLAGS_minloglevel variable.
+///  0 = INFO (default), 1 = WARNING, 2 = ERROR, 3 = FATAL
+#[repr(C)]
+#[derive(Debug, Default, Clone, Copy)]
+pub enum RimeMinLogLevel {
+    #[default]
+    Info = 0,
+    Warn = 1,
+    Error = 2,
+    Fatal = 3,
 }
 
-impl Debug for RimeInner {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, env!("CARGO_PKG_NAME"))
-    }
+#[cfg(feature = "logging")]
+#[derive(Debug, Default, Clone)]
+pub enum RimeLogKind {
+    #[default]
+    StdErr,
+    TempDir,
+    Dir(PathBuf),
 }
 
 #[derive(Default, Debug)]
 pub struct RimeBuilder {
     shared_data_dir: Option<PathBuf>,
     user_data_dir: Option<PathBuf>,
-    log_dir: Option<PathBuf>,
-    min_log_level: i32,
+    #[cfg(feature = "logging")]
+    /// Directory of log files.
+    /// Value is passed to Glog library using FLAGS_log_dir variable.
+    /// NULL means temporary directory, and "" means only writing to stderr.
+    log_kind: RimeLogKind,
+    #[cfg(feature = "logging")]
+    min_log_level: RimeMinLogLevel,
     distribution_name: Option<String>,
     distribution_code_name: Option<String>,
     distribution_version: Option<String>,
@@ -87,13 +121,14 @@ impl RimeBuilder {
         self
     }
 
-    pub fn log_dir(&mut self, dir: impl AsRef<str>) -> &mut Self {
-        let dir = PathBuf::from(dir.as_ref());
-        self.log_dir = Some(dir);
+    #[cfg(feature = "logging")]
+    pub fn log_kind(&mut self, kind: RimeLogKind) -> &mut Self {
+        self.log_kind = kind;
         self
     }
 
-    pub fn main_log_level(&mut self, level: i32) -> &mut Self {
+    #[cfg(feature = "logging")]
+    pub fn min_log_level(&mut self, level: RimeMinLogLevel) -> &mut Self {
         self.min_log_level = level;
         self
     }
@@ -119,87 +154,80 @@ impl RimeBuilder {
         self
     }
 
-    pub fn build(&mut self) -> Option<Rime> {
-        unsafe {
-            // initialize a rime instance
-            let inner = api::rime_traits_init();
+    pub fn build(&mut self) -> Option<()> {
+        let mut traits = api::RimeTraits::default();
 
-            // configurations
-            (*inner).shared_data_dir = CString::new(self.shared_data_dir.take()?.to_str()?)
-                .ok()?
-                .into_raw();
-
-            (*inner).user_data_dir = CString::new(self.user_data_dir.take()?.to_str()?)
-                .ok()?
-                .into_raw();
-
-            if let Some(dir) = self.log_dir.take() {
-                (*inner).log_dir = CString::new(dir.to_str()?).ok()?.into_raw();
-                (*inner).min_log_level = self.min_log_level;
-            }
-
-            (*inner).distribution_name = CString::new(
-                self.distribution_name
-                    .take()
-                    .or(Some(env!("CARGO_PKG_NAME").to_string()))?,
-            )
-            .ok()?
-            .into_raw();
-
-            (*inner).distribution_code_name =
-                CString::new(self.distribution_code_name.take().or(Some(String::new()))?)
-                    .ok()?
-                    .into_raw();
-
-            (*inner).distribution_version = CString::new(
-                self.distribution_version
-                    .take()
-                    .or(Some(env!("CARGO_PKG_VERSION").to_string()))?,
-            )
-            .ok()?
-            .into_raw();
-
-            (*inner).app_name = CString::new(
-                self.app_name
-                    .take()
-                    .or(Some(env!("CARGO_PKG_NAME").to_string()))?,
-            )
-            .ok()?
-            .into_raw();
-
-            api::RimeSetup(inner);
-            api::RimeInitialize(inner);
-
-            if api::RimeStartMaintenanceOnWorkspaceChange() != 0 {
-                api::RimeJoinMaintenanceThread();
-            }
-
-            Some(Rime(RimeInner {
-                inner,
-                handler: None,
-            }))
+        if let Some(dir) = self.shared_data_dir.take() {
+            traits.shared_data_dir = CString::new(dir.to_str()?).ok()?.into_raw();
         }
+
+        if let Some(dir) = self.user_data_dir.take() {
+            traits.user_data_dir = CString::new(dir.to_str()?).ok()?.into_raw();
+        }
+
+        #[cfg(feature = "logging")]
+        {
+            traits.min_log_level = self.min_log_level as _;
+            match &self.log_kind {
+                // only writing to stderr
+                RimeLogKind::StdErr => {
+                    traits.log_dir = CString::new("").ok()?.into_raw();
+                }
+                RimeLogKind::TempDir => {
+                    // traits.log_dir, NULL means temporary directory
+                }
+                RimeLogKind::Dir(path) => {
+                    if path.exists() && path.metadata().ok()?.is_dir() {
+                        traits.log_dir = CString::new(path.to_str()?).ok()?.into_raw();
+                    } else {
+                        // writing to stderr if log_dir does not exists
+                        traits.log_dir = CString::new("").ok()?.into_raw();
+                    }
+                }
+            }
+        }
+
+        traits.distribution_name = CString::new(
+            self.distribution_name
+                .take()
+                .or(Some(env!("CARGO_PKG_NAME").to_string()))?,
+        )
+        .ok()?
+        .into_raw();
+
+        traits.distribution_code_name = CString::new(
+            self.distribution_code_name
+                .take()
+                .or(Some(env!("CARGO_PKG_NAME").to_string()))?,
+        )
+        .ok()?
+        .into_raw();
+
+        traits.distribution_version = CString::new(
+            self.distribution_version
+                .take()
+                .or(Some(env!("CARGO_PKG_VERSION").to_string()))?,
+        )
+        .ok()?
+        .into_raw();
+
+        traits.app_name = CString::new(
+            self.app_name
+                .take()
+                .or(Some(env!("CARGO_PKG_NAME").to_string()))?,
+        )
+        .ok()?
+        .into_raw();
+
+        unsafe { traits.setup() };
+
+        Some(())
     }
 }
 
-impl Rime {
-    pub fn new() -> Self {
-        unsafe {
-            // initialize a rime instance
-            let mut inner = api::rime_traits_init();
-
-            Rime(RimeInner {
-                inner,
-                handler: None,
-            })
-        }
-    }
-
-    /// Call this function before accessing any other API.
-    pub fn setup(&mut self) {
-        unsafe { api::RimeSetup(self.0.inner) }
-    }
-
+#[doc = include_str!("../README.md")]
+pub mod Rime {
+    use super::*;
     /// Pass a C-string constant in the format "rime.x"
     /// where 'x' is the name of your application.
     /// Add prefix "rime." to ensure old log files are automatically cleaned.
@@ -209,21 +237,6 @@ impl Rime {
             let app_name = CString::new(app_name.as_ref()).unwrap().into_raw();
             api::RimeSetupLogging(app_name);
         }
-    }
-
-    /// Entry
-    pub fn initialize(&mut self) {
-        unsafe { api::RimeInitialize(self.0.inner) }
-    }
-
-    /// Exit
-    pub fn finalize() {
-        unsafe { api::RimeFinalize() }
-    }
-
-    /// Deployment
-    pub fn deployer_initialize(&mut self) {
-        unsafe { api::RimeDeployerInitialize(self.0.inner) }
     }
 
     /// Receive notifications
@@ -243,7 +256,7 @@ impl Rime {
     ///   when handler is NULL, notification is disabled.
     ///
     /// This handler setup should live as long as RimeTraits
-    pub fn set_notification_handler<Handler>(&mut self, handler: Handler)
+    pub fn SetNotificationHandler<Handler>(handler: Handler)
     where
         // It's safe to cast to &str
         Handler: Fn(RimeSessionId, &str, &str) + Send + 'static,
@@ -262,7 +275,7 @@ impl Rime {
 
             handler(session_id, type_, value);
 
-            // This handler should be collected when Rime is dropped.
+            // Just Leak it. There is no way to easily collect the handler in librime.
             std::mem::forget(handler);
         }
 
@@ -270,19 +283,13 @@ impl Rime {
             Box::new(Box::new(handler));
         let context_object = Box::into_raw(context_object);
 
-        self.0.handler.replace(context_object);
-
         unsafe {
             api::RimeSetNotificationHandler(Some(rime_notification_handler), context_object as _);
         }
     }
 
-    pub fn create_session<'a>(&'a self) -> RimeSession<'a> {
-        let id = Rime::CreateSession();
-        RimeSession {
-            id,
-            rime: PhantomData,
-        }
+    pub fn CreateSession() -> RimeSession {
+        RimeSession::new(unsafe { api::RimeCreateSession() })
     }
 
     pub fn DeployWorkspace() -> bool {
@@ -308,15 +315,11 @@ impl Rime {
         unsafe { api::RimeSyncUserData() != 0 }
     }
 
-    fn CreateSession() -> RimeSessionId {
-        unsafe { api::RimeCreateSession() }
-    }
-
     fn FindSession(id: RimeSessionId) -> bool {
         unsafe { api::RimeFindSession(id) != 0 }
     }
 
-    fn DestroySession(id: RimeSessionId) -> bool {
+    pub(crate) fn DestroySession(id: RimeSessionId) -> bool {
         unsafe { api::RimeDestroySession(id) != 0 }
     }
 
@@ -446,25 +449,6 @@ impl Rime {
 
     pub fn GetSchemaList(schema_list: *mut api::RimeSchemaList) -> bool {
         unsafe { api::RimeGetSchemaList(schema_list) != 0 }
-    }
-}
-
-impl AsRef<api::RimeTraits> for Rime {
-    fn as_ref(&self) -> &api::RimeTraits {
-        unsafe { &*self.0.inner }
-    }
-}
-
-impl Drop for RimeInner {
-    fn drop(&mut self) {
-        unsafe {
-            api::RimeCleanupAllSessions();
-            api::RimeFinalize();
-
-            if let Some(handler) = self.handler {
-                let _ = Box::from_raw(handler);
-            }
-        }
     }
 }
 

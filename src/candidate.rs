@@ -6,12 +6,12 @@ use crate::prelude::{Rime, RimeSession};
 use crate::util;
 
 #[derive(Debug)]
-pub struct RimeCandidate<'a> {
+pub struct RimeCandidate {
     pub(crate) candidate: api::RimeCandidate,
-    pub(crate) session: PhantomData<RimeSession<'a>>,
+    pub(crate) session: RimeSession,
 }
 
-impl<'a> RimeCandidate<'a> {
+impl RimeCandidate {
     pub fn text(&self) -> String {
         util::safe_text(self.candidate.text)
     }
@@ -21,12 +21,12 @@ impl<'a> RimeCandidate<'a> {
     }
 }
 
-pub struct RimeCandidateList<'a> {
+pub struct RimeCandidateList {
     pub(crate) list: api::RimeCandidateListIterator,
-    pub(crate) session: PhantomData<RimeSession<'a>>,
+    pub(crate) session: RimeSession,
 }
 
-impl<'a> RimeCandidateList<'a> {
+impl RimeCandidateList {
     pub fn index(&self) -> i32 {
         self.list.index as _
     }
@@ -39,11 +39,11 @@ impl<'a> RimeCandidateList<'a> {
         Rime::CandidateListEnd(&mut self.list);
     }
 
-    pub fn get(&self) -> RimeCandidate<'a> {
+    pub fn get(&self) -> RimeCandidate {
         let candidate = self.list.candidate;
         RimeCandidate {
             candidate,
-            session: PhantomData,
+            session: self.session.clone(),
         }
     }
 }

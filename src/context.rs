@@ -3,12 +3,12 @@ use crate::{api, util};
 use std::ffi::CStr;
 use std::marker::PhantomData;
 
-pub struct RimeContext<'a> {
+pub struct RimeContext {
     pub(crate) context: api::RimeContext,
-    pub(crate) session: PhantomData<RimeSession<'a>>,
+    pub(crate) session: RimeSession,
 }
 
-impl<'a> RimeContext<'a> {
+impl RimeContext {
     pub fn preedit(&self) -> String {
         util::safe_text(self.context.composition.preedit)
     }
@@ -29,7 +29,7 @@ impl<'a> RimeContext<'a> {
     }
 }
 
-impl<'a> Drop for RimeContext<'a> {
+impl Drop for RimeContext {
     fn drop(&mut self) {
         unsafe {
             Rime::FreeContext(&mut self.context);

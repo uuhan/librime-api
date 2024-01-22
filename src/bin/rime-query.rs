@@ -1,22 +1,22 @@
 use librime_api::*;
 
 fn main() {
-    let mut rime = RimeBuilder::new()
+    RimeBuilder::new()
         .shared_data_dir("./rime-ice")
         .user_data_dir("./rime-user")
         .distribution_name("RIME")
         .distribution_code_name("RIME")
         .distribution_version("RIME")
         .app_name("rime-query")
-        .log_dir("./rime-log")
+        .log_kind(RimeLogKind::StdErr)
         .build()
         .expect("create rime failed");
 
-    rime.set_notification_handler(|id, ty, msg| {
+    Rime::SetNotificationHandler(|id, ty, msg| {
         println!("[{}] type: {}, msg: {}", id, ty, msg);
     });
 
-    let session = rime.create_session();
+    let session = Rime::CreateSession();
 
     for key in "china man".chars() {
         session.process_char(key);

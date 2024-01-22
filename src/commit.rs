@@ -1,15 +1,13 @@
-use std::ffi::CStr;
-use std::marker::PhantomData;
-
 use crate::api;
 use crate::prelude::{Rime, RimeSession};
+use std::ffi::CStr;
 
-pub struct RimeCommit<'a> {
+pub struct RimeCommit {
     pub(crate) commit: api::RimeCommit,
-    pub(crate) session: PhantomData<RimeSession<'a>>,
+    pub(crate) session: RimeSession,
 }
 
-impl<'a> RimeCommit<'a> {
+impl RimeCommit {
     pub fn text(&self) -> String {
         if self.commit.text.is_null() {
             return String::new();
@@ -23,7 +21,7 @@ impl<'a> RimeCommit<'a> {
     }
 }
 
-impl<'a> Drop for RimeCommit<'a> {
+impl Drop for RimeCommit {
     fn drop(&mut self) {
         Rime::FreeCommit(&mut self.commit);
     }

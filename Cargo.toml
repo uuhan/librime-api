@@ -27,13 +27,14 @@ include = [
 [lib]
 
 [dependencies]
+thiserror = "1.0.56"
 
 [build-dependencies]
 cmake = "0.1"
 bindgen = "0.69"
-cc = "1.0.83"
 
 [features]
+default = ["logging"]
 link-cxx = []
 link-stdcxx = []
 logging = []

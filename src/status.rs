@@ -3,12 +3,12 @@ use std::marker::PhantomData;
 use crate::api;
 use crate::prelude::*;
 
-pub struct RimeStatus<'a> {
+pub struct RimeStatus {
     pub(crate) status: api::RimeStatus,
-    pub(crate) session: PhantomData<RimeSession<'a>>,
+    pub(crate) session: RimeSession,
 }
 
-impl<'a> Drop for RimeStatus<'a> {
+impl Drop for RimeStatus {
     fn drop(&mut self) {
         Rime::FreeStatus(&mut self.status);
     }

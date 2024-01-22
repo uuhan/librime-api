@@ -31,14 +31,6 @@ fn main() {
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("could not write bindings!");
 
-    cc::Build::new()
-        .cpp(true)
-        .flag("-Wno-missing-field-initializers")
-        .flag("-Icbits")
-        .flag(&format!("-I{}/include", dst.display()))
-        .file("cbits/bindings.cpp")
-        .compile("bindings");
-
     #[allow(unused_mut, unused_assignments)]
     let mut selected = false;
 
@@ -70,7 +62,6 @@ fn main() {
     println!("cargo:rustc-link-lib=static=marisa");
     println!("cargo:rustc-link-lib=static=opencc");
     println!("cargo:rustc-link-lib=static=leveldb");
-    println!("cargo:rustc-link-lib=static=bindings");
 
     println!("cargo:rerun-if-changed=cbits/bindings.h");
     println!("cargo:rerun-if-changed=cbits/bindings.cpp");
