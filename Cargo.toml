@@ -24,14 +24,14 @@ include = [
   "!librime/deps/googletest/build",
 ]
 
-[lib]
-
 [dependencies]
+mlua-sys = { version = "0.5.0", features = ["lua54", "lua-src"] }
 thiserror = "1.0.56"
 
 [build-dependencies]
 cmake = "0.1"
 bindgen = "0.69"
+cc = "1.0.83"
 
 [features]
 default = ["logging"]

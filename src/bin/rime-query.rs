@@ -1,4 +1,4 @@
-use librime_api::*;
+use librime_api::prelude::*;
 
 fn main() {
     RimeBuilder::new()
@@ -16,19 +16,29 @@ fn main() {
         println!("[{}] type: {}, msg: {}", id, ty, msg);
     });
 
-    let session = Rime::CreateSession();
+    let _session = Rime::CreateSession();
 
-    for key in "china man".chars() {
-        session.process_char(key);
+    {
+        // let module = RimeModule::find("core");
+        // println!("find module: {}", util::safe_text((*module).module_name));
+        let module = RimeModule::find("lua");
+        println!("find module: {:?}", module);
 
-        let ctx = session.context();
-        println!("preedit: {}", ctx.preedit());
-        println!("total candidates: {}", ctx.num_candidates());
-
-        for i in ctx.all_candidates() {
-            println!("cans: {}", i);
-        }
+        // let module = RimeModule::find("mymodule");
+        // println!("find module: {}", util::safe_text((*module).module_name));
     }
 
-    std::thread::park();
+    // for key in "man".chars() {
+    //     session.process_char(key);
+    //
+    //     let ctx = session.context();
+    //     println!("preedit: {}", ctx.preedit());
+    //     println!("total candidates: {}", ctx.num_candidates());
+    //
+    //     for (k, v) in ctx.all_candidates() {
+    //         println!("cans: {}, {}", k, v);
+    //     }
+    // }
+
+    Rime::Destory();
 }

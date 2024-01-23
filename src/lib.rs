@@ -3,6 +3,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+extern crate mlua_sys;
+
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -13,7 +15,7 @@ use std::sync::Arc;
 mod mac;
 pub mod util;
 
-mod api {
+pub mod api {
     use std::sync::OnceLock;
 
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -55,11 +57,13 @@ pub mod prelude {
     pub use super::candidate::{RimeCandidate, RimeCandidateList};
     pub use super::commit::RimeCommit;
     pub use super::context::RimeContext;
+    pub use super::module::RimeModule;
     pub use super::session::RimeSession;
     pub use super::status::RimeStatus;
 }
 
 use context::RimeContext;
+use module::RimeModule;
 use session::RimeSession;
 
 pub use api::RimeSessionId;
@@ -219,6 +223,13 @@ impl RimeBuilder {
         .ok()?
         .into_raw();
 
+        // let mut modules = ["default\0".as_ptr(), "lua\0".as_ptr(), std::ptr::null()];
+        // traits.modules = modules.as_mut_ptr() as _;
+
+        // let mut module = RimeModule::new("mymodule");
+        // println!("module.register: {}", module.register());
+        // std::mem::forget(module);
+
         unsafe { traits.setup() };
 
         Some(())
@@ -232,11 +243,16 @@ pub mod Rime {
     /// where 'x' is the name of your application.
     /// Add prefix "rime." to ensure old log files are automatically cleaned.
     #[deprecated(note = "Use RimeSetup() instead.")]
-    pub fn setup_logging(app_name: impl AsRef<str>) {
+    pub fn SetupLogging(app_name: impl AsRef<str>) {
         unsafe {
             let app_name = CString::new(app_name.as_ref()).unwrap().into_raw();
             api::RimeSetupLogging(app_name);
         }
+    }
+
+    /// Enable lua module
+    pub fn RequireLuaModule() {
+        unsafe { api::rime_lua_init() }
     }
 
     /// Receive notifications
@@ -315,11 +331,15 @@ pub mod Rime {
         unsafe { api::RimeSyncUserData() != 0 }
     }
 
-    fn FindSession(id: RimeSessionId) -> bool {
+    pub fn JoinMaintenanceThread() {
+        unsafe { api::RimeJoinMaintenanceThread() }
+    }
+
+    pub fn FindSession(id: RimeSessionId) -> bool {
         unsafe { api::RimeFindSession(id) != 0 }
     }
 
-    pub(crate) fn DestroySession(id: RimeSessionId) -> bool {
+    pub fn DestroySession(id: RimeSessionId) -> bool {
         unsafe { api::RimeDestroySession(id) != 0 }
     }
 
@@ -445,6 +465,17 @@ pub mod Rime {
 
             None
         }
+    }
+
+    pub fn Finalize() {
+        unsafe {
+            api::RimeFinalize();
+        }
+    }
+
+    pub fn Destory() {
+        Rime::CleanupAllSessions();
+        Rime::Finalize();
     }
 
     pub fn GetSchemaList(schema_list: *mut api::RimeSchemaList) -> bool {

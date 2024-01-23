@@ -3,6 +3,10 @@ use crate::prelude::{RimeCandidateList, RimeCommit, RimeContext, RimeSessionId};
 use crate::Rime;
 use std::sync::Arc;
 
+pub const KEY_BACKSPACE: i32 = 0xff08;
+pub const KEY_F4: i32 = 0xffc1;
+pub const KEY_ESCAPE: i32 = 0xff1b;
+
 #[derive(Debug, Clone)]
 pub struct RimeSession(Arc<RimeSessionInner>);
 
@@ -78,6 +82,12 @@ impl RimeSession {
                 list,
                 session: self.clone(),
             }
+        }
+    }
+
+    pub fn delete_keys(&self, num: usize) {
+        for _ in 0..num {
+            self.process_key(KEY_BACKSPACE);
         }
     }
 

@@ -6,6 +6,11 @@ fn main() {
         .output()
         .expect("librime make deps failed.");
 
+    std::process::Command::new("sh")
+        .args(["librime/install-plugins.sh", "hchunhui/librime-lua"])
+        .output()
+        .expect("librime-lua fetch failed");
+
     #[cfg(feature = "logging")]
     let rime_logging_switch = "on";
     #[cfg(not(feature = "logging"))]
@@ -30,6 +35,14 @@ fn main() {
     bindings
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("could not write bindings!");
+
+    cc::Build::new()
+        .cpp(true)
+        .flag("-Wno-missing-field-initializers")
+        .flag("-Icbits")
+        .flag(&format!("-I{}/include", dst.display()))
+        .file("cbits/bindings.cpp")
+        .compile("bindings");
 
     #[allow(unused_mut, unused_assignments)]
     let mut selected = false;
@@ -62,6 +75,7 @@ fn main() {
     println!("cargo:rustc-link-lib=static=marisa");
     println!("cargo:rustc-link-lib=static=opencc");
     println!("cargo:rustc-link-lib=static=leveldb");
+    println!("cargo:rustc-link-lib=static=bindings");
 
     println!("cargo:rerun-if-changed=cbits/bindings.h");
     println!("cargo:rerun-if-changed=cbits/bindings.cpp");
