@@ -16,16 +16,26 @@ fn main() {
         println!("[{}] type: {}, msg: {}", id, ty, msg);
     });
 
-    let _session = Rime::CreateSession();
+    let session = Rime::CreateSession();
 
     {
         // let module = RimeModule::find("core");
         // println!("find module: {}", util::safe_text((*module).module_name));
-        let module = RimeModule::find("lua");
-        println!("find module: {:?}", module);
+        // let module = RimeModule::find("mymodule");
+        // println!("find module: {:?}", module);
 
         // let module = RimeModule::find("mymodule");
         // println!("find module: {}", util::safe_text((*module).module_name));
+    }
+
+    session.process_string("math");
+    let ctx = session.context();
+
+    println!("preedit: {}", ctx.preedit());
+    println!("total candidates: {}", ctx.num_candidates());
+
+    for (k, v) in ctx.all_candidates() {
+        println!("cans: {}, {}", k, v);
     }
 
     // for key in "man".chars() {

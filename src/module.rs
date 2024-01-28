@@ -14,9 +14,8 @@ impl Debug for RimeModule {
 
 impl Default for RimeModule {
     fn default() -> Self {
-        // let module = rime_struct_init!(api::RimeModule);
         unsafe {
-            let module = api::rime_module_init();
+            let module = rime_struct_init!(api::RimeModule);
             RimeModule { module }
         }
     }

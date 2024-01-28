@@ -3,8 +3,7 @@ name = "librime-api"
 version = "0.1.1+72f833d"
 edition = "2021"
 homepage = "https://github.com/uuhan/librime-api"
-description = "librime rust bindings"
-license = "UNKNOWN"
+description = "librime for rust"
 readme = "README.md"
 include = [
   "Cargo.toml",

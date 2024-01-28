@@ -70,6 +70,7 @@ fn main() {
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native={}/librime/lib", cur);
     println!("cargo:rustc-link-lib=static=rime");
+    #[cfg(feature = "logging")]
     println!("cargo:rustc-link-lib=static=glog");
     println!("cargo:rustc-link-lib=static=yaml-cpp");
     println!("cargo:rustc-link-lib=static=marisa");
