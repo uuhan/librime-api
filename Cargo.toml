@@ -1,6 +1,6 @@
 [package]
 name = "librime-api"
-version = "0.1.0+de12d6a"
+version = "0.2.0+1.11.2"
 edition = "2021"
 homepage = "https://github.com/uuhan/librime-api"
 description = "librime rust bindings"
@@ -34,6 +34,8 @@ cmake = "0.1"
 bindgen = "0.69"
 
 [features]
+default = []
 link-cxx = []
 link-stdcxx = []
 logging = []
+prebuilt = []
