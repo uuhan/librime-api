@@ -47,20 +47,25 @@ fn select_librime() -> PathBuf {
     }
 
     if cfg!(target_os = "windows") {
-        dst.push(format!("{}/msvc/x64/1.11.2/dist", std::env::current_dir().unwrap().display()));
+        dst.push(format!(
+            "{}/msvc/x64/1.11.2/dist",
+            std::env::current_dir().unwrap().display()
+        ));
         println!("cargo::rustc-link-search=native={}/lib", dst.display());
-        println!("cargo::rustc-link-lib=rime");
+        println!("cargo::rustc-link-lib=static=rime");
     } else if cfg!(target_os = "macos") {
-        dst.push(format!("{}/macos/universal/1.11.2/dist", std::env::current_dir().unwrap().display()));
+        dst.push(format!(
+            "{}/macos/universal/1.11.2/dist",
+            std::env::current_dir().unwrap().display()
+        ));
         println!("cargo::rustc-link-search=native={}/lib", dst.display());
-        println!("cargo::rustc-link-lib=rime");
-
+        println!("cargo::rustc-link-lib=static=rime");
     } else {
         println!("cargo::warning=Linux Prebuilt **NOT** Supplied");
         return compile_librime();
     }
 
-    dst 
+    dst
 }
 
 fn compile_librime() -> PathBuf {
@@ -82,7 +87,7 @@ fn compile_librime() -> PathBuf {
         .build();
 
     println!("cargo::rustc-link-search=native={}/lib", dst.display());
-    println!("cargo::rustc-link-lib=rime");
+    println!("cargo::rustc-link-lib=static=rime");
 
     println!("cargo::rustc-link-search=native=./librime/lib");
     println!("cargo::rustc-link-lib=static=glog");
