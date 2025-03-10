@@ -1,6 +1,6 @@
 [package]
 name = "librime-api"
-version = "0.1.1+72f833d"
+version = "0.1.2+1.13.1"
 edition = "2021"
 homepage = "https://github.com/uuhan/librime-api"
 description = "librime for rust"
@@ -24,16 +24,16 @@ include = [
 ]
 
 [dependencies]
-mlua-sys = { version = "0.5.0", features = ["lua54", "lua-src"] }
-thiserror = "1.0.56"
+mlua-sys = { version = "0.6", features = ["lua54", "vendored"] }
+thiserror = "2"
 
 [build-dependencies]
 cmake = "0.1"
-bindgen = "0.69"
-cc = "1.0.83"
+bindgen = "0.71"
+cc = "1.2"
 
 [features]
-default = ["logging"]
+default = []
 link-cxx = []
 link-stdcxx = []
 logging = []
