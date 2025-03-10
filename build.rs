@@ -59,7 +59,7 @@ fn select_librime() -> PathBuf {
             std::env::current_dir().unwrap().display()
         ));
         println!("cargo::rustc-link-search=native={}/lib", dst.display());
-        println!("cargo::rustc-link-lib=static=rime");
+        println!("cargo::rustc-link-lib=rime");
     } else {
         println!("cargo::warning=Linux Prebuilt **NOT** Supplied");
         return compile_librime();
