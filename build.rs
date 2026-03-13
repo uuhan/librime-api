@@ -91,8 +91,9 @@ fn compile_librime() -> PathBuf {
     println!("cargo::rustc-link-lib=static=rime");
 
     println!("cargo::rustc-link-search=native=./librime/lib");
+    #[cfg(feature = "logging")]
     println!("cargo::rustc-link-lib=static=glog");
-    println!("cargo::rustc-link-lib=static=yaml-cpp");
+    println!("cargo::rustc-link-lib=yaml-cpp");
     println!("cargo::rustc-link-lib=static=marisa");
     println!("cargo::rustc-link-lib=static=opencc");
     println!("cargo::rustc-link-lib=static=leveldb");
