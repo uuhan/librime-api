@@ -84,6 +84,7 @@ fn compile_librime() -> PathBuf {
         .define("ENABLE_LOGGING", rime_logging_switch)
         .define("BUILD_SHARED_LIBS", "off")
         .define("BUILD_STATIC", "on")
+        .define("CMAKE_INCLUDE_DIRECTORIES_BEFORE", "ON")
         .build();
 
     println!("cargo::rustc-link-search=native={}/lib", dst.display());
