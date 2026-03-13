@@ -69,8 +69,11 @@ fn select_librime() -> PathBuf {
 }
 
 fn compile_librime() -> PathBuf {
+    // cmake 4.x removed compatibility with cmake_minimum_required < 3.5,
+    // which breaks older submodules (yaml-cpp, glog, etc.)
     std::process::Command::new("make")
         .args(["-Clibrime", "deps"])
+        .env("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
         .output()
         .expect("librime make deps failed.");
 
@@ -85,6 +88,7 @@ fn compile_librime() -> PathBuf {
         .define("BUILD_SHARED_LIBS", "off")
         .define("BUILD_STATIC", "on")
         .define("CMAKE_INCLUDE_DIRECTORIES_BEFORE", "ON")
+        .define("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
         .build();
 
     println!("cargo::rustc-link-search=native={}/lib", dst.display());
@@ -93,7 +97,7 @@ fn compile_librime() -> PathBuf {
     println!("cargo::rustc-link-search=native=./librime/lib");
     #[cfg(feature = "logging")]
     println!("cargo::rustc-link-lib=static=glog");
-    println!("cargo::rustc-link-lib=yaml-cpp");
+    println!("cargo::rustc-link-lib=static=yaml-cpp");
     println!("cargo::rustc-link-lib=static=marisa");
     println!("cargo::rustc-link-lib=static=opencc");
     println!("cargo::rustc-link-lib=static=leveldb");
