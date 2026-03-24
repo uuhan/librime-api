@@ -74,6 +74,8 @@ fn compile_librime() -> PathBuf {
     std::process::Command::new("make")
         .args(["-Clibrime", "deps"])
         .env("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
+        .env("CFLAGS", "-fPIC")
+        .env("CXXFLAGS", "-fPIC")
         .output()
         .expect("librime make deps failed.");
 
@@ -89,6 +91,9 @@ fn compile_librime() -> PathBuf {
         .define("BUILD_STATIC", "on")
         .define("CMAKE_INCLUDE_DIRECTORIES_BEFORE", "ON")
         .define("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
+        .define("CMAKE_POSITION_INDEPENDENT_CODE", "ON")
+        .cflag("-fPIC")
+        .cxxflag("-fPIC")
         .build();
 
     println!("cargo::rustc-link-search=native={}/lib", dst.display());
